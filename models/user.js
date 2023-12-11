@@ -16,6 +16,7 @@ module.exports = (sequelize, DataTypes) => {
   }
   User.init({
     name: DataTypes.STRING,
+    timezone: DataTypes.STRING,
     email: {
       type: DataTypes.STRING,
       allowNull: false,
@@ -40,8 +41,8 @@ module.exports = (sequelize, DataTypes) => {
   });
   
   // Method to validate the entered password
-  User.prototype.validPassword = async function (password) {
-    return bcrypt.compare(password, this.password);
+  User.prototype.validPassword = function (password) {
+    return bcrypt.compareSync(password, this.password);
   };
   return User;
 };

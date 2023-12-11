@@ -1,15 +1,13 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const { sequelize } = require('./models'); // Make sure to import sequelize correctly
-const authRoutes = require('./routes/authRoutes');
-//const otherRoutes = require('./routes/otherRoutes');
+const apiRoutes = require('./routes/apiRoutes');
 
 const app = express();
 
 app.use(bodyParser.json());
 
-app.use('/auth', authRoutes);
-//app.use('/other', otherRoutes);
+app.use('/api', apiRoutes);
 
 const PORT = process.env.PORT || 3000;
 
