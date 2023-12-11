@@ -1,16 +1,15 @@
-
-'use strict';
-const { Model } = require('sequelize');
-const { Sequelize, DataTypes } = require('sequelize');
+"use strict";
+const { Model } = require("sequelize");
+const { Sequelize, DataTypes } = require("sequelize");
 
 module.exports = (sequelize, DataTypes) => {
   class Task extends Model {
     static associate(models) {
       // Define associations here if needed
-      Task.belongsTo(models.User, { foreignKey: 'user_id' });
+      Task.belongsTo(models.User, { foreignKey: "user_id" });
     }
   }
-  
+
   Task.init(
     {
       user_id: {
@@ -22,17 +21,16 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
       },
       status: {
-        type: DataTypes.ENUM('pending', 'completed'),
+        type: DataTypes.ENUM("pending", "completed"),
         allowNull: false,
-        defaultValue: 'pending',
+        defaultValue: "pending",
       },
     },
     {
       sequelize,
-      modelName: 'Task',
+      modelName: "Task",
     }
   );
 
   return Task;
 };
-

@@ -19,6 +19,7 @@ npx sequelize-cli db:migrate
 
 # Rollback Migration
 npx sequelize-cli db:migrate:undo
+
 npx sequelize-cli db:migrate:undo:all // all migration file
 
 # Bcrypt and jsonwebtoken
