@@ -9,13 +9,24 @@ const env = process.env.NODE_ENV || 'development';
 const config = require(__dirname + '/../config/config.js')[env];
 const db = {};
 
-let sequelize;
-if (config.use_env_variable) {
-  sequelize = new Sequelize(process.env[config.use_env_variable], config);
-} else {
-  sequelize = new Sequelize(config.database, config.username, config.password, config);
-}
+// Create a Sequelize instance
+const sequelize = new Sequelize(config.database, config.username, config.password, config);
 
+// Import models
+const UserModel = require('./user');
+const TaskModel = require('./task');
+
+// Initialize models with sequelize instance
+const User = UserModel(sequelize, Sequelize);
+const Task = TaskModel(sequelize, Sequelize);
+
+// Set models in the db object
+db.User = User;
+db.Task = Task;
+db.sequelize = sequelize;
+db.Sequelize = Sequelize;
+
+// Read all files in the current directory and load models
 fs
   .readdirSync(__dirname)
   .filter(file => {
@@ -31,13 +42,11 @@ fs
     db[model.name] = model;
   });
 
+// Associate models if they have an 'associate' method
 Object.keys(db).forEach(modelName => {
   if (db[modelName].associate) {
     db[modelName].associate(db);
   }
 });
-
-db.sequelize = sequelize;
-db.Sequelize = Sequelize;
 
 module.exports = db;

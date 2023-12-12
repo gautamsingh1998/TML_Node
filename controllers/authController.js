@@ -48,7 +48,7 @@ exports.login = async (req, res) => {
     }
 
     const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, {
-      expiresIn: "1h",
+      expiresIn: "24h",
     });
 
     return res.json({
@@ -64,6 +64,12 @@ exports.login = async (req, res) => {
     return res.status(500).json({ error: "Internal Server Error" });
   }
 };
+
+/*
+|--------------------------------------------------------------------------
+| Get the User Details.
+|--------------------------------------------------------------------------
+*/
 
 exports.getUserDetails = async (req, res) => {
   try {
@@ -96,6 +102,11 @@ exports.logout = (req, res) => {
   res.json({ message: "User Logout successful" });
 };
 
+/*
+|--------------------------------------------------------------------------
+| User Delete
+|--------------------------------------------------------------------------
+*/
 exports.userDelete = async (req, res) => {
   const userId = req.params.id; // Assuming you're passing the user ID in the request parameters
 
