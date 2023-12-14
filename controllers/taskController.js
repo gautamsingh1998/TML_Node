@@ -216,32 +216,18 @@ moment.tz.add('Asia/Kolkata|LMT IST|-5A.i -50|01|-LzA.i 2oK 1ui0|34e5');
     // Get User TimeZone
     const userTimeZoneOffset = Helper.setUserTimeZoneOffset() || 'Etc/GMT';
   
-  // Start of Day
-  const startDate = moment().tz(userTimeZoneOffset).startOf('day').tz(process.env.TIMEZONE);
+    // Start of Day
+    const startDate = moment().tz(userTimeZoneOffset).startOf('day').tz(process.env.TIMEZONE);
 
-  // End of Day
-  const endDate = moment().tz(userTimeZoneOffset).endOf('day').tz(process.env.TIMEZONE);
+    // End of Day
+    const endDate = moment().tz(userTimeZoneOffset).endOf('day').tz(process.env.TIMEZONE);
 
-  // Get the yesterday's date in the user's timezone
-  const yesterdayDate = moment().tz(userTimeZoneOffset).subtract(1, 'day').format('YYYY-MM-DD');
+    // Get the yesterday's date in the user's timezone
+    const yesterdayDate = moment().tz(userTimeZoneOffset).subtract(1, 'day').format('YYYY-MM-DD');
 
-  // Get the current date in the user's timezone
-  const todayDate = moment().tz(userTimeZoneOffset).startOf('day').format('YYYY-MM-DD');
+    // Get the current date in the user's timezone
+    const todayDate = moment().tz(userTimeZoneOffset).startOf('day').format('YYYY-MM-DD');
 
-  //console.log('todayDate ', todayDate);
-      
-        // Call the static function with await
-      const totalDaysWon = await this.totalWon(userId);
-      const totalDaysLost = await this.totalLoss(userId);
-
-    // Last Seven Day Won Task
-    const lastSevenDaysWon = await this.weekDaysWon(userId);
-
-    // Last Month Won Task
-    
-    const monthDaysWon = await this.monthDaysWon(userId);
-    
-  
     // Total Last 7 days
     const totalSevenDays = 7;
 
@@ -250,52 +236,261 @@ moment.tz.add('Asia/Kolkata|LMT IST|-5A.i -50|01|-LzA.i 2oK 1ui0|34e5');
     const previousMonth = currentDate.clone().subtract(1, 'month');
     const totalMonthDays = previousMonth.daysInMonth();
 
+
+    async function totalWonAndLost(userId, userTimeZoneOffset) {
+      try {
+          const wonTasks = await Task.findAll({
+            where: {
+              user_id: userId,
+            },
+          });
+          
+          const uniqueCompletedDates = new Set();
+          const uniquePendingDates = new Set();
+          const uniqueDates = new Set();
+          wonTasks.forEach(task => {
+              // Check if the task has a 'createdAt' property
+              if (task.createdAt) {
+                const date = task.createdAt.toISOString().split('T')[0];
+                if (!uniqueDates.has(date)) {
+                  uniqueDates.add(date);   // Add the date to the set to track uniqueness 
+                if (task.status === 'Completed' && !uniqueCompletedDates.has(date)) {
+                  uniqueCompletedDates.add(date);
+                } else if (task.status === 'Pending' && !uniquePendingDates.has(date)) {
+                  uniquePendingDates.add(date);
+                }
+              }
+            }
+          });
+      
+        const completedCount = uniqueCompletedDates.size;
+        const pendingCount = uniquePendingDates.size;
+
+        return { completedCount, pendingCount };
+      
+      } catch (error) {
+        console.error('Error in totalWon function:', error);
+        throw new Error('Error in totalWon function');
+      }
+    }
+    
+    const { completedCount, pendingCount } = await totalWonAndLost(userId, userTimeZoneOffset);
+    const totalDaysWon = completedCount;
+    const totalDaysLost = pendingCount;
+    
     /*
+    |--------------------------------------------------------------------------
+    | Week Won Days
+    |--------------------------------------------------------------------------
+    */
+    async function weekDaysWon(userId, userTimeZoneOffset) {
+      try {
+        const currentDate = new Date();
+        currentDate.setDate(currentDate.getDate() - 7); // Subtract 7 days
+
+        const wonTasks = await Task.findAll({
+          where: {
+            user_id: userId,
+            createdAt: {
+              [Op.gte]: currentDate, // Filter tasks created on or after currentDate
+            },
+          },
+        });
+      
+        const uniqueCompletedDates = new Set();
+        const uniqueDates = new Set();
+        wonTasks.forEach(task => {
+            // Check if the task has a 'createdAt' property
+            if (task.createdAt) {
+              const date = task.createdAt.toISOString().split('T')[0];
+              if (!uniqueDates.has(date)) {
+                uniqueDates.add(date);   // Add the date to the set to track uniqueness 
+              if (task.status === 'Completed' && !uniqueCompletedDates.has(date)) {
+                uniqueCompletedDates.add(date);
+              } 
+            }
+          }
+        });
+    
+        const completedCount = uniqueCompletedDates.size;
+        return completedCount;
+    
+      } catch (error) {
+        console.error('Error in totalWon function:', error);
+        throw new Error('Error in totalWon function');
+      }
+    }
+
+    const lastSevenDaysWon = await weekDaysWon(userId, userTimeZoneOffset);
+
+    /*
+    |--------------------------------------------------------------------------
+    | MONTH Won Days
+    |--------------------------------------------------------------------------
+    */
+    async function monthDayWon(userId, userTimeZoneOffset) {
+      try {
+            // Get the current date
+            const currentDate = new Date();
+
+            // Calculate the first day of the current month
+            const firstDayOfCurrentMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+
+            // Calculate the first day of the last month
+            const firstDayOfLastMonth = new Date(firstDayOfCurrentMonth);
+            firstDayOfLastMonth.setMonth(firstDayOfCurrentMonth.getMonth() - 1);
+
+            const wonTasks = await Task.findAll({
+              where: {
+                user_id: userId,
+                createdAt: {
+                  [Op.gte]: firstDayOfLastMonth,
+                  [Op.lt]: firstDayOfCurrentMonth,
+                },
+              },
+            });
+            
+            const uniqueCompletedDates = new Set();
+            const uniqueDates = new Set();
+            wonTasks.forEach(task => {
+                // Check if the task has a 'createdAt' property
+                if (task.createdAt) {
+                  const date = task.createdAt.toISOString().split('T')[0];
+                  if (!uniqueDates.has(date)) {
+                    uniqueDates.add(date);   // Add the date to the set to track uniqueness 
+                  if (task.status === 'Completed' && !uniqueCompletedDates.has(date)) {
+                    uniqueCompletedDates.add(date);
+                  } 
+                }
+              }
+            });
+    
+          const completedCount = uniqueCompletedDates.size;
+          return completedCount;
+    
+      } catch (error) {
+        console.error('Error in totalWon function:', error);
+        throw new Error('Error in totalWon function');
+      }
+    }
+
+    const monthDaysWon = await monthDayWon(userId, userTimeZoneOffset);
+
+  /*
   |--------------------------------------------------------------------------
   |  # Get Highest Streak Tasks.
   |--------------------------------------------------------------------------
   */
+
   async function getHighestStreakTasks(userId, userTimeZoneOffset) {
-    const todayDate = moment().format('YYYY-MM-DD');
-
-    const streakHighestTasks = await Task.findAll({
-      attributes: [
-        [sequelize.fn('DATE', sequelize.fn('CONVERT_TZ', sequelize.col('createdAt'), '+00:00', userTimeZoneOffset)), 'converted_created_at'],
-        [sequelize.fn('SUM', sequelize.literal("IF(status = 'completed', 1, 0)")), 'completed_count'],
-        [sequelize.fn('SUM', sequelize.literal("IF(status = 'pending', 1, 0)")), 'pending_count'],
-        [sequelize.fn('COUNT', sequelize.col('*')), 'total'],
-      ],
-      group: [
-        Sequelize.fn('DATE', Sequelize.fn('CONVERT_TZ', Sequelize.col('createdAt'), '+00:00', userTimeZoneOffset)),
-        'Task.createdAt',
-      ],
-      where: {
-        user_id: userId,
-        createdAt: {
-          [Op.lte]: sequelize.fn('CONVERT_TZ', sequelize.literal('NOW()'), '+00:00', userTimeZoneOffset),
+    try {
+      const wonTasks = await Task.findAll({
+        where: {
+          user_id: userId,
         },
-      },
-      order: [[sequelize.fn('CONVERT_TZ', sequelize.col('createdAt'), '+00:00', userTimeZoneOffset), 'DESC']],
-    });
+      });
 
-    return streakHighestTasks;
+      const uniqueCompletedDates = new Set();
+      let currentStreak = 0;
+      let highestStreak = 0;
+
+      wonTasks.forEach((task) => {
+        // Check if the task has a 'createdAt' property
+        if (task.createdAt instanceof Date) {
+          const date = task.createdAt.toISOString().split('T')[0];
+
+          if (!uniqueCompletedDates.has(date) && task.status === 'Completed') {
+            uniqueCompletedDates.add(date);
+            currentStreak++;
+
+            // Update the highest streak if the current streak is greater
+            if (currentStreak > highestStreak) {
+              highestStreak = currentStreak;
+            }
+          } else {
+            // Reset the current streak if the task is not completed
+            currentStreak = 0;
+          }
+        }
+      });
+
+      console.log('Highest Streak Tasks:', highestStreak);
+
+      return highestStreak;
+    } catch (error) {
+      console.error('Error in getHighestStreakTasks function:', error);
+      throw new Error('Error in getHighestStreakTasks function');
+    }
   }
 
-  const streakHighestTasks = await getHighestStreakTasks(userId, userTimeZoneOffset);
-  const highestStreak = Helper.getHighestStreak(streakHighestTasks);
+  // Assuming this is in an async function or use Promise.then() to handle promises
+  const highestStreakTasks = await getHighestStreakTasks(userId, userTimeZoneOffset);
+
+
+  async function getStreakData(userId) {
+    try {
+      const wonTasks = await Task.findAll({
+        where: {
+          user_id: userId,
+        },
+      });
+  
+      let breakStreaks = 0;
+      let wonStreaks = 0;
+      let currentStreak = 0;
+  
+      wonTasks.forEach((task) => {
+        // Check if the task has a 'createdAt' property
+        if (task.createdAt instanceof Date) {
+          const date = task.createdAt.toISOString().split('T')[0];
+  
+          if (task.status === 'Completed') {
+            // If completed, increment wonStreak and reset breakStreak
+            wonStreaks++;
+            breakStreaks = 0;
+  
+            // Update the current streak
+            currentStreak = currentStreak + 1;
+          } else {
+            // If not completed, increment breakStreak and reset wonStreak
+            breakStreaks++;
+            wonStreaks = 0;
+  
+            // Reset the current streak
+            currentStreak = 0;
+          }
+  
+          // You can add additional logic here based on your requirements
+          // For example, updating the highest streak or doing something with the date
+        }
+      });
+  
+      console.log('wonStreak:', wonStreaks);
+      console.log('breakStreak:', breakStreaks);
+  
+      return { wonStreaks, breakStreaks };
+    } catch (error) {
+      console.error('Error in getStreakData function:', error);
+      throw new Error('Error in getStreakData function');
+    }
+  }
+
+  const { wonStreaks, breakStreaks } = await getStreakData(userId, userTimeZoneOffset);
+  const wonStreak = wonStreaks;
+  const breakStreak = breakStreaks;
 
 
     const data = {
       totalWon: totalDaysWon,
       totalLost: totalDaysLost,
-      heighestStreak: highestStreak,
+      heighestStreak: highestStreakTasks,
       lastSevenDays: {
         totalDays: totalSevenDays,
         totalWon: lastSevenDaysWon
         },
       steak_data: {
-        breakStreak: "wonStreak > 0 ? 0 : breakStreak",
-        wonStreak: "wonStreak"
+        breakStreak: wonStreak > 0 ? 0 : breakStreak,
+        wonStreak: wonStreak
       },
       lastMonth: {
         totalDays: totalMonthDays,
@@ -310,145 +505,3 @@ moment.tz.add('Asia/Kolkata|LMT IST|-5A.i -50|01|-LzA.i 2oK 1ui0|34e5');
       data: data
     });
   };
-
-  exports.totalWon = async function totalWon(userId) {
-    // Get User TimeZone
-    const userTimeZoneOffset = Helper.setUserTimeZoneOffset() || 'Asia/Karachi';
-
-
-    try {
-      
-      const wonTask = await Task.findAll({
-        attributes: [
-          [Sequelize.fn('DATE', Sequelize.fn('CONVERT_TZ', Sequelize.col('createdAt'), '+00:00', userTimeZoneOffset)), 'converted_created_at'],
-          [Sequelize.fn('SUM', Sequelize.literal("IF(status = 'completed', 1, 0)")), 'completed_count'],
-          [Sequelize.fn('COUNT', Sequelize.col('*')), 'total'],
-        ],
-        group: [
-          Sequelize.fn('DATE', Sequelize.fn('CONVERT_TZ', Sequelize.col('createdAt'), '+00:00', userTimeZoneOffset)),
-          'Task.createdAt',
-        ],
-        having: Sequelize.literal('total = completed_count'),
-        where: {
-          user_id: userId,
-        },
-      });
-      
-      return wonTask.length > 0 ? wonTask[0].get('total') : 0;
-
-    } catch (error) {
-      console.error('Error in totalWon function:', error);
-      throw new Error('Error in totalWon function');
-    }
-  };
-
-
-  exports.totalLoss = async function totalLoss(userId) {
-    // Get User TimeZone
-    const userTimeZoneOffset = Helper.setUserTimeZoneOffset() || 'Etc/GMT';
-
-    try {
-    
-      const lostTask = await Task.findAll({
-        attributes: [
-          [Sequelize.fn('DATE', Sequelize.fn('CONVERT_TZ', Sequelize.col('createdAt'), '+00:00', userTimeZoneOffset)), 'converted_created_at'],
-          [Sequelize.fn('SUM', Sequelize.literal("IF(status = 'pending', 1, 0)")), 'pending_count'],
-          [Sequelize.fn('COUNT', '*'), 'total'],
-        ],
-        group: [
-          Sequelize.fn('DATE', Sequelize.fn('CONVERT_TZ', Sequelize.col('createdAt'), '+00:00', userTimeZoneOffset)),
-          'Task.createdAt',
-        ],
-        having: Sequelize.literal('total = pending_count'),
-        where: {
-          user_id: userId,
-        },
-      });
-      
-    return lostTask.length > 0 ? lostTask[0].get('total') : 0;
-
-    } catch (error) {
-      console.error('Error in totalLoss function:', error);
-      throw new Error('Error in totalLoss function');
-    }
-  };
-
-  /*
-  |--------------------------------------------------------------------------
-  | Week Won Days
-  |--------------------------------------------------------------------------
-  */
-  exports.weekDaysWon = async function weekDaysWon(userId) {
-    try {
-      // Get User TimeZone
-      const userTimeZoneOffset = Helper.setUserTimeZoneOffset() || 'Etc/GMT';
-
-      // Calculate the date 8 days ago in the user's timezone
-      const date = moment().subtract(8, 'days').format('YYYY-MM-DD');
-
-      // Get today's date in the user's timezone
-      const todayDate = moment().format('YYYY-MM-DD');
-
-      const weekDaysWon = await Task.findAll({
-        where: {
-          user_id: userId,
-          createdAt: {
-            [Op.between]: [
-              Sequelize.fn('CONVERT_TZ', Sequelize.literal('DATE_SUB(NOW(), INTERVAL 7 DAY)'), '+00:00', userTimeZoneOffset),
-              Sequelize.fn('CONVERT_TZ', Sequelize.literal('NOW()'), '+00:00', userTimeZoneOffset),
-            ],
-          },
-        },
-        attributes: [
-          [sequelize.fn('CONVERT_TZ', sequelize.col('createdAt'), '+00:00', userTimeZoneOffset), 'converted_created_at'],
-          [sequelize.fn('SUM', sequelize.literal("IF(status = 'completed', 1, 0)")), 'completed_count'],
-          [sequelize.fn('COUNT', sequelize.col('*')), 'total'],
-        ],
-        group: [
-          Sequelize.fn('DATE', Sequelize.fn('CONVERT_TZ', Sequelize.col('createdAt'), '+00:00', userTimeZoneOffset)),
-          'Task.createdAt',
-        ],
-        having: sequelize.literal('COUNT(*) = SUM(IF(status = \'completed\', 1, 0))'),
-      });
-
-      return weekDaysWon.length > 0 ? weekDaysWon[0].get('total') : 0;
-    } catch (error) {
-      console.error('Error in weekDaysWon:', error);
-      throw new Error('Error in weekDaysWon');
-    }
-  };
-
-
-  exports.monthDaysWon = async function monthDaysWon(userId) {
-    // Get User TimeZone
-    const userTimeZoneOffset = Helper.setUserTimeZoneOffset() || 'Etc/GMT';
-
-    try {
-      const monthDaysWon = await Task.findAll({
-        where: {
-          user_id: userId,
-          createdAt: {
-            [Op.between]: [
-              Sequelize.fn('CONVERT_TZ', Sequelize.literal('DATE_SUB(NOW(), INTERVAL 30 DAY)'), '+00:00', userTimeZoneOffset),
-              Sequelize.fn('CONVERT_TZ', Sequelize.literal('NOW()'), '+00:00', userTimeZoneOffset),
-            ],
-          },
-        },
-        attributes: [
-          [sequelize.fn('CONVERT_TZ', sequelize.col('createdAt'), '+00:00', userTimeZoneOffset), 'converted_created_at'],
-          [sequelize.fn('SUM', sequelize.literal("IF(status = 'completed', 1, 0)")), 'completed_count'],
-          [sequelize.fn('COUNT', sequelize.col('*')), 'total'],
-        ],
-        group: [
-          Sequelize.fn('DATE', Sequelize.fn('CONVERT_TZ', Sequelize.col('createdAt'), '+00:00', userTimeZoneOffset)),
-          'Task.createdAt',
-        ],
-        having: sequelize.literal('COUNT(*) = SUM(IF(status = \'completed\', 1, 0))'),
-      });
-
-      return monthDaysWon.length > 0 ? monthDaysWon[0].get('total') : 0;
-    } catch (error) {
-      console.error('Error in monthDaysWon:', error);
-      throw new Error('Error in monthDaysWon');
-    }
-  }

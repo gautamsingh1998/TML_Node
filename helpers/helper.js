@@ -18,7 +18,7 @@ class Helper {
         completedTasks.forEach((value) => {
           total += value.total;
     
-          if (value.status === 'completed') {
+          if (value.status === 'Completed') {
             completed += value.total;
           }
         });
@@ -87,44 +87,13 @@ class Helper {
       return lostStreak;
     }
 
-    /*
+  /*
   |--------------------------------------------------------------------------
   |  # Get Highest Streak  
   |--------------------------------------------------------------------------
   */
-  static getHighestStreak(taskData) {
-    let highestStreak = 0;
-    let currentStreak = 0;
-    let prevDate = null;
-
-    taskData.forEach(result => {
-      const createdAtDate = moment(result.converted_created_at).format('YYYY-MM-DD');
-      const completedCount = result.completed_count;
-      const totalCount = result.total;
-
-      if (completedCount === totalCount) {
-        // Task is completed
-        if (prevDate && moment(createdAtDate).diff(prevDate, 'days') === 1) {
-          // Increment the current streak
-          currentStreak++;
-        } else {
-          // Start a new streak
-          currentStreak = 1;
-        }
-      } else {
-        // Task is not completed, reset the current streak
-        currentStreak = 0;
-      }
-
-      // Update the highest streak
-      if (currentStreak > highestStreak) {
-        highestStreak = currentStreak;
-      }
-
-      // Set the previous date for comparison in the next iteration
-      prevDate = moment(createdAtDate);
-    });
-
+  static getHighestStreak(wonTask) {
+    
     return highestStreak;
   }
 
