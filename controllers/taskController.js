@@ -1,4 +1,4 @@
-const { Task, Sequelize } = require("../models");
+const { Task, Quote, Sequelize } = require("../models");
 const { User } = require("../models");
 const express = require("express");
 const router = express.Router();
@@ -9,6 +9,7 @@ const moment = require('moment-timezone');
 const sequelize  = require('../sequelize');
 const mysql = require('mysql2/promise');
 const authMiddleware = require("../middleware/authMiddleware");
+const task = require("../models/task");
 moment.tz.load(require('moment-timezone/data/packed/latest.json'));
 require('moment-timezone'); // Load all timezone data
 moment.tz.add('Asia/Kolkata|LMT IST|-5A.i -50|01|-LzA.i 2oK 1ui0|34e5');
@@ -396,13 +397,14 @@ moment.tz.add('Asia/Kolkata|LMT IST|-5A.i -50|01|-LzA.i 2oK 1ui0|34e5');
 
       wonTasks.forEach((task) => {
         // Check if the task has a 'createdAt' property
+        
         if (task.createdAt instanceof Date) {
           const date = task.createdAt.toISOString().split('T')[0];
 
-          if (!uniqueCompletedDates.has(date) && task.status === 'Completed') {
+          if (task.status === 'Completed' && !uniqueCompletedDates.has(date)  ) {
             uniqueCompletedDates.add(date);
             currentStreak++;
-
+            
             // Update the highest streak if the current streak is greater
             if (currentStreak > highestStreak) {
               highestStreak = currentStreak;
@@ -410,13 +412,11 @@ moment.tz.add('Asia/Kolkata|LMT IST|-5A.i -50|01|-LzA.i 2oK 1ui0|34e5');
           } else {
             // Reset the current streak if the task is not completed
             currentStreak = 0;
+            
           }
         }
       });
-
-      console.log('Highest Streak Tasks:', highestStreak);
-
-      return highestStreak;
+      return highestStreak+1;
     } catch (error) {
       console.error('Error in getHighestStreakTasks function:', error);
       throw new Error('Error in getHighestStreakTasks function');
@@ -426,49 +426,45 @@ moment.tz.add('Asia/Kolkata|LMT IST|-5A.i -50|01|-LzA.i 2oK 1ui0|34e5');
   // Assuming this is in an async function or use Promise.then() to handle promises
   const highestStreakTasks = await getHighestStreakTasks(userId, userTimeZoneOffset);
 
+    async function getStreakData(userId) {
+      try {
+        const wonTasks = await Task.findAll({
+          where: {
+            user_id: userId,
+          },
+        });
 
-  async function getStreakData(userId) {
-    try {
-      const wonTasks = await Task.findAll({
-        where: {
-          user_id: userId,
-        },
-      });
-  
-      let breakStreaks = 0;
-      let wonStreaks = 0;
-      let currentStreak = 0;
-  
-      wonTasks.forEach((task) => {
-        // Check if the task has a 'createdAt' property
-        if (task.createdAt instanceof Date) {
-          const date = task.createdAt.toISOString().split('T')[0];
-  
-          if (task.status === 'Completed') {
-            // If completed, increment wonStreak and reset breakStreak
-            wonStreaks++;
-            breakStreaks = 0;
-  
-            // Update the current streak
-            currentStreak = currentStreak + 1;
-          } else {
-            // If not completed, increment breakStreak and reset wonStreak
-            breakStreaks++;
-            wonStreaks = 0;
-  
-            // Reset the current streak
-            currentStreak = 0;
+        let breakStreaks = 0;
+        let wonStreaks = 0;
+        let currentStreak = 0;
+        const uniqueCompletedDates = new Set();
+        const uniquePendingDates = new Set();
+        wonTasks.forEach((task) => {
+          // Check if the task has a 'createdAt' property
+          if (task.createdAt instanceof Date) {
+            const date = task.createdAt.toISOString().split('T')[0];
+              // Add the date to the set to track uniqueness
+              if (task.status === 'Completed' && !uniqueCompletedDates.has(date)) {
+                // If the task is completed and the date is unique, update won streaks
+                uniqueCompletedDates.add(date);
+                wonStreaks++;
+                currentStreak++;
+              }
+            
+              if (task.status === 'Pending' && !uniquePendingDates.has(date)) {
+                uniquePendingDates.add(date);
+                breakStreaks--;
+                wonStreaks = 0;
+                currentStreak++;
+              }
+              // Update breakStreaks when there's a break in the streak
+              if (currentStreak > 1 && task.status === 'Completed' ) {
+                breakStreaks = wonStreaks;
+              }
           }
-  
-          // You can add additional logic here based on your requirements
-          // For example, updating the highest streak or doing something with the date
-        }
-      });
-  
-      console.log('wonStreak:', wonStreaks);
-      console.log('breakStreak:', breakStreaks);
-  
-      return { wonStreaks, breakStreaks };
+        });
+
+        return { wonStreaks, breakStreaks };
     } catch (error) {
       console.error('Error in getStreakData function:', error);
       throw new Error('Error in getStreakData function');
@@ -479,6 +475,41 @@ moment.tz.add('Asia/Kolkata|LMT IST|-5A.i -50|01|-LzA.i 2oK 1ui0|34e5');
   const wonStreak = wonStreaks;
   const breakStreak = breakStreaks;
 
+  async function todayDays(userId) {
+    try {
+          // Get tasks for today
+          const today = new Date();
+          today.setHours(0, 0, 0, 0); // Set time to the beginning of the day
+          const taskPercentage = await Task.findAll({
+            attributes: ['status', [sequelize.fn('count', sequelize.col('*')), 'total']],
+            where: {
+              user_id: userId,
+              createdAt: {
+                [Op.gte]: today,
+              },
+            },
+            group: ['status'],
+          });
+          return taskPercentage;
+        } catch (error) {
+          console.error('Error in todayDays function:', error);
+          throw new Error('Error in todayDays function');
+        }
+  }
+
+  //const todayPercentag = taskPercentage;
+  const taskPercentage = await todayDays(userId, userTimeZoneOffset);
+  const taskPercentageData = taskPercentage.map(result => result.get({ plain: true }));
+  const todayPercentage = Helper.getCompletedTaskPercentage(taskPercentageData);
+
+  
+  const randomQuote = await Quote.findOne({
+    order: sequelize.random(),
+    limit: 1,
+  });
+  
+  //console.log(randomQuote);
+ 
 
     const data = {
       totalWon: totalDaysWon,
@@ -489,16 +520,16 @@ moment.tz.add('Asia/Kolkata|LMT IST|-5A.i -50|01|-LzA.i 2oK 1ui0|34e5');
         totalWon: lastSevenDaysWon
         },
       steak_data: {
-        breakStreak: wonStreak > 0 ? 0 : breakStreak,
+        breakStreak:(wonStreak > 0) ? 0 : breakStreak,
         wonStreak: wonStreak
       },
       lastMonth: {
         totalDays: totalMonthDays,
         totalWon: monthDaysWon
       },
-      todayPercentage: "todayPercentage",
-      quotes: "quotes",
-      taskByMonths: "taskByMonths"
+      todayPercentage: todayPercentage,
+      quotes: randomQuote,
+      taskByMonths: "taskByMonthsProcessed"
     };
     
     return res.json({
