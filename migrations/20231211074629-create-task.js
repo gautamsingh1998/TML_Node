@@ -1,9 +1,8 @@
-
-'use strict';
+"use strict";
 
 module.exports = {
   up: async (queryInterface, Sequelize) => {
-    await queryInterface.createTable('Tasks', {
+    await queryInterface.createTable("Tasks", {
       id: {
         allowNull: false,
         autoIncrement: true,
@@ -14,8 +13,8 @@ module.exports = {
         type: Sequelize.INTEGER,
         allowNull: false,
         references: {
-          model: 'Users',
-          key: 'id',
+          model: "Users",
+          key: "id",
         },
       },
       name: {
@@ -23,9 +22,9 @@ module.exports = {
         allowNull: false,
       },
       status: {
-        type: Sequelize.ENUM('Pending', 'Completed'),
+        type: Sequelize.ENUM("Pending", "Completed"),
         allowNull: false,
-        defaultValue: 'Pending',
+        defaultValue: "Pending",
       },
       createdAt: {
         allowNull: false,
@@ -39,6 +38,6 @@ module.exports = {
   },
 
   down: async (queryInterface, Sequelize) => {
-    await queryInterface.dropTable('Tasks');
+    await queryInterface.dropTable("Tasks");
   },
 };

@@ -1,4 +1,4 @@
-'use strict';
+/* 'use strict';
 const axios = require('axios');
 
 module.exports = {
@@ -29,5 +29,43 @@ module.exports = {
   down: async (queryInterface, Sequelize) => {
     // Delete all records from the 'Quotes' table
     await queryInterface.bulkDelete('Quotes', null, {});
+  },
+}; */
+
+"use strict";
+const axios = require("axios");
+
+module.exports = {
+  up: async (queryInterface, Sequelize) => {
+    try {
+      const numberOfQuotes = 100000;
+      const quotesData = [];
+
+      for (let i = 0; i < numberOfQuotes; i++) {
+        const response = await axios.get("https://api.quotable.io/random");
+        const quote = response.data;
+
+        if (quote) {
+          quotesData.push({
+            text: quote.content,
+            author: quote.author,
+            createdAt: quote.dateAdded,
+            updatedAt: quote.dateModified,
+          });
+        }
+      }
+
+      if (quotesData.length > 0) {
+        await queryInterface.bulkInsert("Quotes", quotesData);
+        console.log("Quotes seeded successfully.");
+      }
+    } catch (error) {
+      console.error("Error seeding quotes:", error.message);
+    }
+  },
+
+  down: async (queryInterface, Sequelize) => {
+    // Delete all records from the 'Quotes' table
+    await queryInterface.bulkDelete("Quotes", null, {});
   },
 };

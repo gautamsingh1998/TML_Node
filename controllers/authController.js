@@ -2,6 +2,12 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const { User } = require("../models");
 
+/*
+|--------------------------------------------------------------------------
+| User Register.
+|--------------------------------------------------------------------------
+*/
+
 exports.register = async (req, res) => {
   const { name, email, timezone, password } = req.body;
 
@@ -36,7 +42,11 @@ exports.register = async (req, res) => {
     return res.status(500).json({ error: "Internal Server Error" });
   }
 };
-
+/*
+|--------------------------------------------------------------------------
+|   User login.
+|--------------------------------------------------------------------------
+*/
 exports.login = async (req, res) => {
   const { email, password } = req.body;
 
@@ -73,21 +83,18 @@ exports.login = async (req, res) => {
 
 exports.getUserDetails = async (req, res) => {
   try {
-    // Use req.user to access user details
     const user = req.user;
 
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }
 
-    // Customize the response as needed
     return res.json({
       user: {
         id: user.id,
         name: user.name,
         email: user.email,
         timezone: user.timezone,
-        // Add other user properties as needed
       },
     });
   } catch (error) {
@@ -95,6 +102,12 @@ exports.getUserDetails = async (req, res) => {
     return res.status(500).json({ error: "Internal Server Error" });
   }
 };
+
+/*
+|--------------------------------------------------------------------------
+| User Logout
+|--------------------------------------------------------------------------
+*/
 
 exports.logout = (req, res) => {
   res.clearCookie("token");
@@ -108,17 +121,15 @@ exports.logout = (req, res) => {
 |--------------------------------------------------------------------------
 */
 exports.userDelete = async (req, res) => {
-  const userId = req.params.id; // Assuming you're passing the user ID in the request parameters
+  const userId = req.params.id;
 
   try {
-    // Find the user by ID
     const user = await User.findByPk(userId);
 
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }
 
-    // Delete the user
     await user.destroy();
 
     res.json({ message: "User delete successful" });
