@@ -1,6 +1,7 @@
 const moment = require("moment-timezone");
 const { User, Sequelize } = require("../models");
 const { Task } = require("../models");
+const constants = require("../constants");
 
 class Helper {
   /*
@@ -16,7 +17,7 @@ class Helper {
       completedTasks.forEach((value) => {
         total += value.total;
 
-        if (value.status === "Completed") {
+        if (value.status === constants.status.completed) {
           completed += value.total;
         }
       });

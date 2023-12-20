@@ -18,7 +18,7 @@ module.exports = {
         }));
 
         await queryInterface.bulkInsert('Quotes', quotesData);
-        
+
         console.log('Quotes seeded successfully.');
       }
     } catch (error) {
@@ -38,7 +38,7 @@ const axios = require("axios");
 module.exports = {
   up: async (queryInterface, Sequelize) => {
     try {
-      const numberOfQuotes = 100000;
+      const numberOfQuotes = 10000;
       const quotesData = [];
 
       for (let i = 0; i < numberOfQuotes; i++) {

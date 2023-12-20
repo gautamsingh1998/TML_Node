@@ -56,7 +56,7 @@ exports.addTask = async (req, res) => {
     const task = await Task.create({
       user_id: userId,
       name: name,
-      status: "Pending",
+      status: constants.status.pending,
     });
 
     if (task) {
@@ -285,12 +285,12 @@ exports.dashboard = async (req, res) => {
           if (!uniqueDates.has(date)) {
             uniqueDates.add(date); // Add the date to the set to track uniqueness
             if (
-              task.status === "Completed" &&
+              task.status === constants.status.completed &&
               !uniqueCompletedDates.has(date)
             ) {
               uniqueCompletedDates.add(date);
             } else if (
-              task.status === "Pending" &&
+              task.status === constants.status.pending &&
               !uniquePendingDates.has(date)
             ) {
               uniquePendingDates.add(date);
@@ -344,7 +344,7 @@ exports.dashboard = async (req, res) => {
           if (!uniqueDates.has(date)) {
             uniqueDates.add(date); // Add the date to the set to track uniqueness
             if (
-              task.status === "Completed" &&
+              task.status === constants.status.completed &&
               !uniqueCompletedDates.has(date)
             ) {
               uniqueCompletedDates.add(date);
@@ -403,7 +403,7 @@ exports.dashboard = async (req, res) => {
           if (!uniqueDates.has(date)) {
             uniqueDates.add(date); // Add the date to the set to track uniqueness
             if (
-              task.status === "Completed" &&
+              task.status === constants.status.completed &&
               !uniqueCompletedDates.has(date)
             ) {
               uniqueCompletedDates.add(date);
@@ -446,7 +446,10 @@ exports.dashboard = async (req, res) => {
         if (task.createdAt instanceof Date) {
           const date = task.createdAt.toISOString().split("T")[0];
 
-          if (task.status === "Completed" && !uniqueCompletedDates.has(date)) {
+          if (
+            task.status === constants.status.completed &&
+            !uniqueCompletedDates.has(date)
+          ) {
             uniqueCompletedDates.add(date);
             currentStreak++;
 
@@ -460,7 +463,7 @@ exports.dashboard = async (req, res) => {
           }
         }
       });
-      return highestStreak + 1;
+      return highestStreak;
     } catch (error) {
       console.error("Error in getHighestStreakTasks function:", error);
       throw new Error("Error in getHighestStreakTasks function");
@@ -491,21 +494,27 @@ exports.dashboard = async (req, res) => {
         if (task.createdAt instanceof Date) {
           const date = task.createdAt.toISOString().split("T")[0];
           // Add the date to the set to track uniqueness
-          if (task.status === "Completed" && !uniqueCompletedDates.has(date)) {
+          if (
+            task.status === constants.status.completed &&
+            !uniqueCompletedDates.has(date)
+          ) {
             // If the task is completed and the date is unique, update won streaks
             uniqueCompletedDates.add(date);
             wonStreaks++;
             currentStreak++;
           }
 
-          if (task.status === "Pending" && !uniquePendingDates.has(date)) {
+          if (
+            task.status === constants.status.pending &&
+            !uniquePendingDates.has(date)
+          ) {
             uniquePendingDates.add(date);
             breakStreaks--;
             wonStreaks = 0;
             currentStreak++;
           }
           // Update breakStreaks when there's a break in the streak
-          if (currentStreak > 1 && task.status === "Completed") {
+          if (currentStreak > 1 && task.status === constants.status.completed) {
             breakStreaks = wonStreaks;
           }
         }
