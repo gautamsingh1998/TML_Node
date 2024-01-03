@@ -1,3 +1,5 @@
+require("dotenv").config();
+const constants = require("../constants");
 /* 'use strict';
 const axios = require('axios');
 
@@ -32,17 +34,17 @@ module.exports = {
   },
 }; */
 
-"use strict";
+("use strict");
 const axios = require("axios");
 
 module.exports = {
   up: async (queryInterface, Sequelize) => {
     try {
-      const numberOfQuotes = 10000;
+      const numberOfQuotes = process.env.QUOTES_NUMBER;
       const quotesData = [];
 
       for (let i = 0; i < numberOfQuotes; i++) {
-        const response = await axios.get("https://api.quotable.io/random");
+        const response = await axios.get(constants.quote.apiUrl);
         const quote = response.data;
 
         if (quote) {
@@ -65,7 +67,6 @@ module.exports = {
   },
 
   down: async (queryInterface, Sequelize) => {
-    // Delete all records from the 'Quotes' table
     await queryInterface.bulkDelete("Quotes", null, {});
   },
 };

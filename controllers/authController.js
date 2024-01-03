@@ -42,6 +42,7 @@ exports.register = async (req, res) => {
     return res.status(500).json({ error: "Internal Server Error" });
   }
 };
+
 /*
 |--------------------------------------------------------------------------
 |   User login.
@@ -80,7 +81,6 @@ exports.login = async (req, res) => {
 | Get the User Details.
 |--------------------------------------------------------------------------
 */
-
 exports.getUserDetails = async (req, res) => {
   try {
     const user = req.user;
@@ -108,10 +108,8 @@ exports.getUserDetails = async (req, res) => {
 | User Logout
 |--------------------------------------------------------------------------
 */
-
 exports.logout = (req, res) => {
   res.clearCookie("token");
-
   res.json({ message: "User Logout successful" });
 };
 

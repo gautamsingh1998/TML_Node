@@ -1,4 +1,4 @@
-const { Task, Quote, Sequelize } = require("../models");
+const { Task, Quote, StateDistrict, Sequelize } = require("../models");
 const { User } = require("../models");
 const express = require("express");
 const router = express.Router();
@@ -572,7 +572,7 @@ exports.dashboard = async (req, res) => {
   }); */
 
   const axios = require("axios");
-  const apiUrl = "https://api.quotable.io/random";
+  const apiUrl = constants.quote.apiUrl;
 
   async function fetchData() {
     try {
@@ -587,6 +587,75 @@ exports.dashboard = async (req, res) => {
     }
   }
   const randomQuote = await fetchData();
+
+  /*   async function state_district_wise() {
+    try {
+      const stateDistrictData = await StateDistrict.findAll({
+        where: {
+          state: {
+            [Sequelize.Op.notLike]: "State Unassigned",
+          },
+        },
+      });
+
+      // Organize the data into the desired format
+      const formattedData = stateDistrictData.reduce((result, item) => {
+        const { state, districts, statecode } = item.dataValues;
+
+        // Check if the state already exists in the result object
+        if (!result[state]) {
+          result[state] = { statecode, districts: [districts] };
+        } else {
+          // If the state already exists, add the district to the existing array
+          result[state].districts.push(districts);
+        }
+
+        return result;
+      }, {});
+
+      return formattedData;
+    } catch (error) {
+      console.error("Error fetching state and district data:", error);
+      throw new Error("Internal Server Error");
+    }
+  }
+  const list_of_state_district_wise = await state_district_wise(); */
+
+  async function state_district_wise() {
+    try {
+      const apiResponse = await axios.get(constants.state_district_wise.apiUrl);
+      // Transform the API response data
+      const transformedData = transformData(apiResponse.data);
+      return transformedData;
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    }
+  }
+
+  function transformData(data) {
+    const transformedData = {};
+
+    // Loop through each state in the original data
+    for (const stateName in data) {
+      if (
+        data.hasOwnProperty(stateName) &&
+        stateName !== constants.state_district_wise.stateName
+      ) {
+        const stateData = data[stateName];
+        const districts = stateData.districtData;
+
+        // Create a new state object with nested districts
+        transformedData[stateName] = {
+          districts: Object.keys(districts),
+        };
+      }
+    }
+
+    return transformedData;
+  }
+
+  // Call the fetchData function to start the process
+  const list_of_state_district_wise = await state_district_wise();
 
   const data = {
     totalWon: totalDaysWon,
@@ -607,6 +676,9 @@ exports.dashboard = async (req, res) => {
     todayPercentage: todayPercentage,
     quotes: randomQuote,
     taskByMonths: "taskByMonthsProcessed",
+    list_of_state_district_wise: {
+      state: list_of_state_district_wise,
+    },
   };
 
   return res.json({

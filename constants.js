@@ -6,4 +6,11 @@ module.exports = {
     completed: "Completed",
     pending: "Pending",
   },
+  state_district_wise: {
+    stateName: "State Unassigned",
+    apiUrl: "https://api.covid19india.org/state_district_wise.json",
+  },
+  quote: {
+    apiUrl: "https://api.quotable.io/random",
+  },
 };

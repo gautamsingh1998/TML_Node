@@ -5,10 +5,10 @@ const constants = require("../constants");
 
 class Helper {
   /*
-    |--------------------------------------------------------------------------
-    |  # Get Completed Task Percentage
-    |--------------------------------------------------------------------------
-    */
+  |--------------------------------------------------------------------------
+  |  # Get Completed Task Percentage
+  |--------------------------------------------------------------------------
+  */
   static getCompletedTaskPercentage(completedTasks) {
     let total = 0;
     let completed = 0;
@@ -25,34 +25,6 @@ class Helper {
 
     return parseFloat(total === 0 ? 0 : ((completed * 100) / total).toFixed(2));
   }
-
-  /* static dataAllbyMonth(taskByMonths) {
-      // Implementation for dataAllbyMonth
-      // ...
-
-      return data;
-    }
-
-    static dataAllbyWeek(taskByWeeks) {
-      // Implementation for dataAllbyWeek
-      // ...
-
-      return data;
-    }
-
-    static calculateWonLossByWeek(taskByWeeks) {
-      // Implementation for calculateWonLossByWeek
-      // ...
-
-      return list;
-    }
-
-    static calculateWonLossByMonth(taskByMonths) {
-      // Implementation for calculateWonLossByMonth
-
-      return list;
-    }
- */
 
   static dataAllbyMonth(taskByMonths) {
     const data = {};
@@ -103,17 +75,14 @@ class Helper {
 
   static timeZoneConvertToUserTime(value) {
     const userTimeZone = User.timezone || process.env.TIMEZONE;
-
     return moment.utc(value).tz(userTimeZone).format("YYYY-MM-DD HH:mm:ss");
   }
 
   static reportRequestDate(date) {
     const userTimeZone = this.setUserTimeZoneOffset();
-
     const dateTimeString = `${date} 00:00:00`;
     const userDateTime = moment.tz(dateTimeString, userTimeZone);
     const utcDateTime = userDateTime.clone().utc();
-
     return utcDateTime.format("YYYY-MM-DD HH:mm:ss");
   }
 
