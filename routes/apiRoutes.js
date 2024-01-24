@@ -1,6 +1,7 @@
 const express = require("express");
 const authController = require("../controllers/authController");
 const taskController = require("../controllers/taskController");
+const countryController = require("../controllers/countryController");
 const authMiddleware = require("../middleware/authMiddleware");
 
 const router = express.Router();
@@ -32,5 +33,6 @@ router.get("/getTask", taskController.getTask);
 router.put("/updateTask/:id", taskController.updateTask);
 router.delete("/task-delete/:id", taskController.taskDelete);
 router.get("/dashboard", taskController.dashboard);
+router.get("/countryDashboard", countryController.countryDashboard);
 
 module.exports = router;

@@ -21,16 +21,24 @@ const sequelize = new Sequelize(
 const UserModel = require("./user");
 const TaskModel = require("./task");
 const StateDistrictModel = require("./statedistrict");
+const CountryModel = require("./country");
+const StateModel = require("./state");
+const CityModel = require("./city");
 
 // Initialize models with sequelize instance
 const User = UserModel(sequelize, Sequelize);
 const Task = TaskModel(sequelize, Sequelize);
 const StateDistrict = StateDistrictModel(sequelize, Sequelize);
-
+const Country = CountryModel(sequelize, Sequelize);
+const State = StateModel(sequelize, Sequelize);
+const City = CityModel(sequelize, Sequelize);
 // Set models in the db object
 db.User = User;
 db.Task = Task;
-db.Task = StateDistrict;
+db.StateDistrict = StateDistrict;
+db.Country = Country;
+db.State = State;
+db.City = City;
 db.sequelize = sequelize;
 db.Sequelize = Sequelize;
 

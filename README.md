@@ -34,7 +34,10 @@ npm install jsonwebtoken bcrypt
 # generateSecret.js
 
 const crypto = require('crypto');
-
 const secret = crypto.randomBytes(32).toString('hex');
 console.log(secret);
 node generateSecret.js
+
+# Token expires Time
+
+expiresIn: "365d", // or set it to a very long duration, e.g., "365d" for 365 days
