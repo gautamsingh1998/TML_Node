@@ -86,22 +86,6 @@ exports.countryDashboard = async (req, res) => {
             cities: [],
           };
 
-          /*  const allCities = City.getCitiesOfState(
-            country.isoCode,
-            state.isoCode
-          );
-
-          for (const city of allCities) {
-            const cityData = {
-              city: city.name,
-              /* isoCode: city.isoCode,
-              countryCode: city.countryCode,
-              latitude: city.latitude,
-              longitude: city.longitude, 
-            };
-            stateData.cities.push(cityData);
-          } */
-
           const allCities = City.getCitiesOfState(
             country.isoCode,
             state.isoCode

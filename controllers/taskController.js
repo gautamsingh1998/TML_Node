@@ -95,9 +95,6 @@ exports.getTask = async (req, res) => {
     )
       .endOf("day")
       .tz("UTC");
-    /* 
-      console.log('startDate:', startDate.format()); // Debugging statement
-      console.log('endDate:', endDate.format()); // Debugging statement */
 
     const userId = req.user.id;
 
@@ -107,7 +104,7 @@ exports.getTask = async (req, res) => {
         "name",
         "createdAt",
         "status",
-        "updatedAt", // Include the 'status' field
+        "updatedAt",
         [
           sequelize.literal(
             `DATE_FORMAT(CONVERT_TZ(createdAt, '+00:00', '330'), '%Y-%m-%d')`
@@ -203,12 +200,12 @@ exports.updateTask = async (req, res) => {
 };
 
 /*
-  |--------------------------------------------------------------------------
-  |  Deletes a task by its ID.
-  |--------------------------------------------------------------------------
-  */
+|--------------------------------------------------------------------------
+|  Deletes a task by its ID.
+|--------------------------------------------------------------------------
+*/
 exports.taskDelete = async (req, res) => {
-  const taskId = req.params.id; // Assuming you're passing the task ID in the request parameters
+  const taskId = req.params.id;
 
   try {
     // Find the user by ID
@@ -317,10 +314,10 @@ exports.dashboard = async (req, res) => {
   const totalDaysLost = pendingCount;
 
   /*
-    |--------------------------------------------------------------------------
-    | Week Won Days
-    |--------------------------------------------------------------------------
-    */
+  |--------------------------------------------------------------------------
+  | Week Won Days
+  |--------------------------------------------------------------------------
+  */
   async function weekDaysWon(userId, userTimeZoneOffset) {
     try {
       const currentDate = new Date();
@@ -330,7 +327,7 @@ exports.dashboard = async (req, res) => {
         where: {
           user_id: userId,
           createdAt: {
-            [Op.gte]: currentDate, // Filter tasks created on or after currentDate
+            [Op.gte]: currentDate,
           },
         },
       });
@@ -342,7 +339,7 @@ exports.dashboard = async (req, res) => {
         if (task.createdAt) {
           const date = task.createdAt.toISOString().split("T")[0];
           if (!uniqueDates.has(date)) {
-            uniqueDates.add(date); // Add the date to the set to track uniqueness
+            uniqueDates.add(date);
             if (
               task.status === constants.status.completed &&
               !uniqueCompletedDates.has(date)
@@ -364,10 +361,10 @@ exports.dashboard = async (req, res) => {
   const lastSevenDaysWon = await weekDaysWon(userId, userTimeZoneOffset);
 
   /*
-    |--------------------------------------------------------------------------
-    | MONTH Won Days
-    |--------------------------------------------------------------------------
-    */
+  |--------------------------------------------------------------------------
+  | MONTH Won Days
+  |--------------------------------------------------------------------------
+  */
   async function monthDayWon(userId, userTimeZoneOffset) {
     try {
       // Get the current date
@@ -401,7 +398,7 @@ exports.dashboard = async (req, res) => {
         if (task.createdAt) {
           const date = task.createdAt.toISOString().split("T")[0];
           if (!uniqueDates.has(date)) {
-            uniqueDates.add(date); // Add the date to the set to track uniqueness
+            uniqueDates.add(date);
             if (
               task.status === constants.status.completed &&
               !uniqueCompletedDates.has(date)
@@ -441,8 +438,6 @@ exports.dashboard = async (req, res) => {
       let highestStreak = 0;
 
       wonTasks.forEach((task) => {
-        // Check if the task has a 'createdAt' property
-
         if (task.createdAt instanceof Date) {
           const date = task.createdAt.toISOString().split("T")[0];
 
@@ -470,7 +465,6 @@ exports.dashboard = async (req, res) => {
     }
   }
 
-  // Assuming this is in an async function or use Promise.then() to handle promises
   const highestStreakTasks = await getHighestStreakTasks(
     userId,
     userTimeZoneOffset
@@ -538,7 +532,7 @@ exports.dashboard = async (req, res) => {
     try {
       // Get tasks for today
       const today = new Date();
-      today.setHours(0, 0, 0, 0); // Set time to the beginning of the day
+      today.setHours(0, 0, 0, 0);
       const taskPercentage = await Task.findAll({
         attributes: [
           "status",
